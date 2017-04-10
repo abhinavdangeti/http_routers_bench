@@ -1,6 +1,6 @@
 # Instructions
 
-1. Running http.Serve benchmarks
+1. Running router.ServeHTTP benchmarks
     - go test -bench=. -test.benchmem
 
 2. Running http.ListenAndServe benchmarks

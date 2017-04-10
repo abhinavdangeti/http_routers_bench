@@ -1,5 +1,4 @@
-Instructions
-============
+# Instructions
 
 1. Running http.Serve benchmarks
     - go test -bench=. -test.benchmem

@@ -1,5 +1,4 @@
-Results
-=======
+# Results
 
 ```
 Spec MacBook Pro
@@ -7,7 +6,8 @@ Spec MacBook Pro
      Memory 16 GB 1600 MHz DDR3
 ```
 
-"router.ServeHTTP"
+## router.ServeHTTP
+
 ```
 [09:26:21] abhinav: ~/Documents/go/src/github.com/abhinavdangeti/routerCheck $ go test -bench=. -test.benchmem
 Benchmark_gmux_serve_GET-8               1000000          1520 ns/op        1064 B/op         12 allocs/op
@@ -20,10 +20,11 @@ Benchmark_httprouter_serve_GET-8        20000000           111 ns/op          32
 Benchmark_httprouter_serve_POST-8        1000000          1077 ns/op         864 B/op          8 allocs/op
 ```
 
-"http.ListenAndServe"
+## http.ListenAndServe
+
 wrk: ./wrk -c100 -d10 -t60 http://127.0.0.1:8080/user/name
 
-gmux:
+### gmux
 ```
 Running 10s test @ http://127.0.0.1:8080/user/123
   10 threads and 100 connections
@@ -35,7 +36,7 @@ Requests/sec:  80310.63
 Transfer/sec:      9.11MB
 ```
 
-bone:
+### bone
 ```
 Running 10s test @ http://127.0.0.1:8080/user/123
   10 threads and 100 connections
@@ -47,7 +48,7 @@ Requests/sec:  82955.95
 Transfer/sec:      9.41MB
 ```
 
-smux:
+### smux
 ```
 Running 10s test @ http://127.0.0.1:8080/user/123
   10 threads and 100 connections
@@ -59,7 +60,7 @@ Requests/sec:  82223.67
 Transfer/sec:      9.33MB
 ```
 
-httprouter:
+### httprouter
 ```
 Running 10s test @ http://127.0.0.1:8080/user/123
   10 threads and 100 connections

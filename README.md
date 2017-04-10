@@ -1,4 +1,4 @@
-# Instructions
+## Instructions
 
 1. Running router.ServeHTTP benchmarks
     - go test -bench=. -test.benchmem

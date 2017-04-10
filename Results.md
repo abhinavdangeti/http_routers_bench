@@ -22,7 +22,9 @@ Benchmark_httprouter_serve_POST-8        1000000          1077 ns/op         864
 
 ## http.ListenAndServe
 
-wrk: ./wrk -c100 -d10 -t60 http://127.0.0.1:8080/user/name
+```
+wrk: ./wrk -c100 -d10 -t60 http://127.0.0.1:8080/user/index
+```
 
 ### gmux
 ```

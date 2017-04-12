@@ -170,7 +170,7 @@ func Benchmark_httprouter_serve_GET(b *testing.B) {
 
 func Benchmark_httprouter_serve_POST(b *testing.B) {
 	index := "primary_index"
-	router := loadhttprouter("POST", "/user/{name}", httprouterWrite)
+	router := loadhttprouter("POST", "/user/:name", httprouterWrite)
 	r, _ := http.NewRequest("POST", "/user/index", bytes.NewReader([]byte(index)))
 	benchServe(b, router, r)
 }

@@ -17,7 +17,7 @@ Benchmark_bone_serve_POST-8              2000000           823 ns/op         848
 Benchmark_smux_serve_GET-8               1000000          1073 ns/op         760 B/op         10 allocs/op
 Benchmark_smux_serve_POST-8              1000000          1144 ns/op         920 B/op         10 allocs/op
 Benchmark_httprouter_serve_GET-8        20000000           111 ns/op          32 B/op          1 allocs/op
-Benchmark_httprouter_serve_POST-8        1000000          1077 ns/op         864 B/op          8 allocs/op
+Benchmark_httprouter_serve_POST-8       20000000           106 ns/op          32 B/op          1 allocs/op
 ```
 
 ## http.ListenAndServe

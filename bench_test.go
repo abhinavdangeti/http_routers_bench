@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"io"
 	"net/http"
+	"regexp"
 	"testing"
 
 	gmux "github.com/gorilla/mux"
@@ -13,6 +14,24 @@ import (
 )
 
 // common
+type route struct {
+	method string
+	path string
+}
+
+var routes = []route{
+	{"GET", "/user/:id"},
+	{"GET", "/user/:id/name/:lastname"},
+	{"GET", "/user/:id/age"},
+	{"GET", "/user/:id/sex"},
+	{"POST", "/user/:id/address/:zip"},
+	{"GET", "/user"},
+	{"DELETE", "/user/:id/address/:country"},
+	{"GET", "/user/:id/height"},
+	{"POST", "/user/:id/phone"},
+	{"GET", "/user/:id/weight"},
+}
+
 type mockResponseWriter struct{}
 
 func (m *mockResponseWriter) Header() (h http.Header) {
@@ -29,49 +48,79 @@ func (m *mockResponseWriter) WriteString(s string) (n int, err error) {
 
 func (m *mockResponseWriter) WriteHeader(int) {}
 
-func benchServe(b *testing.B, router http.Handler, r *http.Request) {
+func benchServeSingleRoute(b *testing.B, router http.Handler, r *http.Request) {
 	w := new(mockResponseWriter)
 	u := r.URL
-	rq := u.RawQuery
 	r.RequestURI = u.RequestURI()
 
 	b.ReportAllocs()
 	b.ResetTimer()
 
 	for i := 0; i < b.N; i++ {
-		u.RawQuery = rq
 		router.ServeHTTP(w, r)
+	}
+}
+
+func benchServeMultipleRoutes(b *testing.B, router http.Handler) {
+	w := new(mockResponseWriter)
+	r, _ := http.NewRequest("GET", "/", nil)
+
+	b.ReportAllocs()
+	b.ResetTimer()
+
+	for i := 0; i < b.N; i++ {
+		for _, route := range routes {
+			r.Method = route.method
+			r.RequestURI = route.path
+			router.ServeHTTP(w, r)
+		}
 	}
 }
 
 // ===================== gmux =======================
 func gmuxWrite(rw http.ResponseWriter, r *http.Request) {
-	params := gmux.Vars(r)
-	io.WriteString(rw, params["name"])
+	io.WriteString(rw, r.RequestURI)
 }
 
-func loadgmux(method, path string, handler http.HandlerFunc) http.Handler {
+func loadGmuxSingleRoute(method, path string) http.Handler {
 	m := gmux.NewRouter()
-	m.HandleFunc(path, handler).Methods(method)
+	m.HandleFunc(path, gmuxWrite).Methods(method)
 	return m
 }
 
-func Benchmark_gmux_serve_GET(b *testing.B) {
-	router := loadgmux("GET", "/user/{name}", gmuxWrite)
-	r, _ := http.NewRequest("GET", "/user/index", nil)
-	benchServe(b, router, r)
+func loadGmuxMultipleRoutes() http.Handler {
+	m := gmux.NewRouter()
+	re := regexp.MustCompile(":([^/]*)")
+	for _, route := range routes {
+		m.HandleFunc(
+			re.ReplaceAllString(route.path, "{$1}"),
+			gmuxWrite,
+		).Methods(route.method)
+	}
+	return m
 }
 
-func Benchmark_gmux_serve_POST(b *testing.B) {
+func Benchmark_gmux_single_route_serve_GET(b *testing.B) {
+	router := loadGmuxSingleRoute("GET", "/user/{name}")
+	r, _ := http.NewRequest("GET", "/user/index", nil)
+	benchServeSingleRoute(b, router, r)
+}
+
+func Benchmark_gmux_single_route_serve_POST(b *testing.B) {
 	index := "primary_index"
-	router := loadgmux("POST", "/user/{name}", gmuxWrite)
+	router := loadGmuxSingleRoute("POST", "/user/{name}")
 	r, _ := http.NewRequest("POST", "/user/index", bytes.NewReader([]byte(index)))
-	benchServe(b, router, r)
+	benchServeSingleRoute(b, router, r)
+}
+
+func Benchmark_gmux_multiple_routes_serve(b *testing.B) {
+	router := loadGmuxMultipleRoutes()
+	benchServeMultipleRoutes(b, router)
 }
 
 /*
 func Benchmark_gmux_listen(b *testing.B) {
-	router := loadgmux("GET", "/user/{name}", gmuxWrite)
+	router := loadGmuxSingleRoute("GET", "/user/{name}")
 	http.ListenAndServe(":8080", router)
 }
 */
@@ -81,41 +130,58 @@ func boneWrite(rw http.ResponseWriter, r *http.Request) {
 	io.WriteString(rw, bone.GetValue(r, "name"))
 }
 
-func loadbone(method, path string, handler http.Handler) http.Handler {
-	b := bone.New()
+func addToBone(method, path string, b *bone.Mux) *bone.Mux {
 	switch method {
 	case "GET":
-		b.Get(path, handler)
+		b.Get(path, http.HandlerFunc(boneWrite))
 	case "POST":
-		b.Post(path, handler)
+		b.Post(path, http.HandlerFunc(boneWrite))
 	case "PUT":
-		b.Put(path, handler)
+		b.Put(path, http.HandlerFunc(boneWrite))
 	case "PATCH":
-		b.Patch(path, handler)
+		b.Patch(path, http.HandlerFunc(boneWrite))
 	case "DELETE":
-		b.Delete(path, handler)
+		b.Delete(path, http.HandlerFunc(boneWrite))
 	default:
 		panic("What is this method!? ..." + method)
 	}
 	return b
 }
 
-func Benchmark_bone_serve_GET(b *testing.B) {
-	router := loadbone("GET", "/user/:name", http.HandlerFunc(boneWrite))
-	r, _ := http.NewRequest("GET", "/user/index", nil)
-	benchServe(b, router, r)
+func loadBoneSingleRoute(method, path string) http.Handler {
+	b := bone.New()
+	return addToBone(method, path, b)
 }
 
-func Benchmark_bone_serve_POST(b *testing.B) {
+func loadBoneMultipleRoutes() http.Handler {
+	b := bone.New()
+	for _, route := range routes {
+		b = addToBone(route.method, route.path, b)
+	}
+	return b
+}
+
+func Benchmark_bone_single_route_serve_GET(b *testing.B) {
+	router := loadBoneSingleRoute("GET", "/user/:name")
+	r, _ := http.NewRequest("GET", "/user/index", nil)
+	benchServeSingleRoute(b, router, r)
+}
+
+func Benchmark_bone_single_route_serve_POST(b *testing.B) {
 	index := "primary_index"
-	router := loadbone("POST", "/user/:name", http.HandlerFunc(boneWrite))
+	router := loadBoneSingleRoute("POST", "/user/:name")
 	r, _ := http.NewRequest("POST", "/user/index", bytes.NewReader([]byte(index)))
-	benchServe(b, router, r)
+	benchServeSingleRoute(b, router, r)
+}
+
+func Benchmark_bone_multiple_routes_serve(b *testing.B) {
+	router := loadBoneMultipleRoutes()
+	benchServeMultipleRoutes(b, router)
 }
 
 /*
 func Benchmark_bone_listen(b *testing.B) {
-	router := loadbone("GET", "/user/:name", http.HandlerFunc(boneWrite))
+	router := loadBoneSingleRoute("GET", "/user/:name")
 	http.ListenAndServe(":8080", router)
 }
 */
@@ -125,28 +191,41 @@ func smuxWrite(rw http.ResponseWriter, r *http.Request) {
 	io.WriteString(rw, r.Context().Value(smux.CtxKey("name")).(string))
 }
 
-func loadsmux(method, path string, handler http.HandlerFunc) http.Handler {
+func loadSmuxSingleRoute(method, path string) http.Handler {
 	m := smux.NewMuxer()
-	m.HandleFunc(path, handler, method)
+	m.HandleFunc(path, smuxWrite, method)
 	return m
 }
 
-func Benchmark_smux_serve_GET(b *testing.B) {
-	router := loadsmux("GET", "/user/:name", smuxWrite)
-	r, _ := http.NewRequest("GET", "/user/index", nil)
-	benchServe(b, router, r)
+func loadSmuxMultipleRoutes() http.Handler {
+	m := smux.NewMuxer()
+	for _, route := range routes {
+		m.HandleFunc(route.path, smuxWrite, route.method)
+	}
+	return m
 }
 
-func Benchmark_smux_serve_POST(b *testing.B) {
+func Benchmark_smux_single_route_serve_GET(b *testing.B) {
+	router := loadSmuxSingleRoute("GET", "/user/:name")
+	r, _ := http.NewRequest("GET", "/user/index", nil)
+	benchServeSingleRoute(b, router, r)
+}
+
+func Benchmark_smux_single_route_serve_POST(b *testing.B) {
 	index := "primary_index"
-	router := loadsmux("POST", "/user/:name", smuxWrite)
+	router := loadSmuxSingleRoute("POST", "/user/:name")
 	r, _ := http.NewRequest("POST", "/user/index", bytes.NewReader([]byte(index)))
-	benchServe(b, router, r)
+	benchServeSingleRoute(b, router, r)
+}
+
+func Benchmark_smux_multiple_routes_serve(b *testing.B) {
+	router := loadSmuxMultipleRoutes()
+	benchServeMultipleRoutes(b, router)
 }
 
 /*
 func Benchmark_smux_listen(b *testing.B) {
-	router := loadsmux("GET", "/user/:name", smuxWrite)
+	router := loadSmuxSingleRoute("GET", "/user/:name")
 	http.ListenAndServe(":8080", router)
 }
 */
@@ -156,28 +235,41 @@ func httprouterWrite(rw http.ResponseWriter, r *http.Request, p httprouter.Param
 	io.WriteString(rw, p.ByName("name"))
 }
 
-func loadhttprouter(method, path string, handle httprouter.Handle) http.Handler {
+func loadHttprouterSingleRoute(method, path string) http.Handler {
 	hr := httprouter.New()
-	hr.Handle(method, path, handle)
+	hr.Handle(method, path, httprouterWrite)
 	return hr
 }
 
-func Benchmark_httprouter_serve_GET(b *testing.B) {
-	router := loadhttprouter("GET", "/user/:name", httprouterWrite)
-	r, _ := http.NewRequest("GET", "/user/index", nil)
-	benchServe(b, router, r)
+func loadHttprouterMultipleRoutes() http.Handler {
+	hr := httprouter.New()
+	for _, route := range routes {
+		hr.Handle(route.method, route.path, httprouterWrite)
+	}
+	return hr
 }
 
-func Benchmark_httprouter_serve_POST(b *testing.B) {
+func Benchmark_httprouter_single_route_serve_GET(b *testing.B) {
+	router := loadHttprouterSingleRoute("GET", "/user/:name")
+	r, _ := http.NewRequest("GET", "/user/index", nil)
+	benchServeSingleRoute(b, router, r)
+}
+
+func Benchmark_httprouter_single_route_serve_POST(b *testing.B) {
 	index := "primary_index"
-	router := loadhttprouter("POST", "/user/:name", httprouterWrite)
+	router := loadHttprouterSingleRoute("POST", "/user/:name")
 	r, _ := http.NewRequest("POST", "/user/index", bytes.NewReader([]byte(index)))
-	benchServe(b, router, r)
+	benchServeSingleRoute(b, router, r)
+}
+
+func Benchmark_httprouter_multiple_routes_serve(b *testing.B) {
+	router := loadHttprouterMultipleRoutes()
+	benchServeMultipleRoutes(b, router)
 }
 
 /*
 func Benchmark_httprouter_listen(b *testing.B) {
-	router := loadhttprouter("GET", "/user/:name", httprouterWrite)
+	router := loadHttprouterSingleRoute("GET", "/user/:name")
 	http.ListenAndServe(":8080", router)
 }
 */

@@ -9,15 +9,23 @@ Spec MacBook Pro
 ## router.ServeHTTP
 
 ```
-[09:26:21] abhinav: ~/Documents/go/src/github.com/abhinavdangeti/routerCheck $ go test -bench=. -test.benchmem
-Benchmark_gmux_serve_GET-8               1000000          1540 ns/op        1064 B/op         12 allocs/op
-Benchmark_gmux_serve_POST-8              1000000          1516 ns/op        1064 B/op         12 allocs/op
-Benchmark_bone_serve_GET-8               2000000           795 ns/op         688 B/op          5 allocs/op
-Benchmark_bone_serve_POST-8              2000000           789 ns/op         688 B/op          5 allocs/op
-Benchmark_smux_serve_GET-8               1000000          1072 ns/op         760 B/op         10 allocs/op
-Benchmark_smux_serve_POST-8              1000000          1092 ns/op         760 B/op         10 allocs/op
-Benchmark_httprouter_serve_GET-8        20000000           107 ns/op          32 B/op          1 allocs/op
-Benchmark_httprouter_serve_POST-8       20000000           106 ns/op          32 B/op          1 allocs/op
+go test -bench=. -test.benchmem
+
+Benchmark_gmux_single_route_serve_GET-8              1000000          1487 ns/op        1056 B/op         11 allocs/op
+Benchmark_gmux_single_route_serve_POST-8             1000000          1487 ns/op        1056 B/op         11 allocs/op
+Benchmark_gmux_multiple_routes_serve-8                100000         17635 ns/op        8804 B/op         80 allocs/op
+
+Benchmark_bone_single_route_serve_GET-8              2000000           776 ns/op         688 B/op          5 allocs/op
+Benchmark_bone_single_route_serve_POST-8             2000000           773 ns/op         688 B/op          5 allocs/op
+Benchmark_bone_multiple_routes_serve-8                100000         19584 ns/op       11493 B/op        164 allocs/op
+
+Benchmark_smux_single_route_serve_GET-8              1000000          1065 ns/op         760 B/op         10 allocs/op
+Benchmark_smux_single_route_serve_POST-8             1000000          1091 ns/op         760 B/op         10 allocs/op
+Benchmark_smux_multiple_routes_serve-8                200000         10944 ns/op        9764 B/op        100 allocs/op
+
+Benchmark_httprouter_single_route_serve_GET-8       20000000           106 ns/op          32 B/op          1 allocs/op
+Benchmark_httprouter_single_route_serve_POST-8      20000000           106 ns/op          32 B/op          1 allocs/op
+Benchmark_httprouter_multiple_routes_serve-8          200000          9235 ns/op        8484 B/op         70 allocs/op
 ```
 
 ## http.ListenAndServe

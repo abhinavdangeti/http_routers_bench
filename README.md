@@ -11,8 +11,8 @@
 
 ## References
 
-1. github.com/gorilla/mux
-2. github.com/go-zoo/bone
-3. github.com/szxp/mux
-4. github.com/julienschmidt/httprouter
-5. github.com/julienschmidt/go-http-routing-benchmark
+1. [gorilla/mux](https://github.com/gorilla/mux)
+2. [go-zoo/bone](https://github.com/go-zoo/bone)
+3. [szxp/mux](https://github.com/szxp/mux)
+4. [julienschmidt/httprouter](https://github.com/julienschmidt/httprouter)
+5. [julienschmidt/go-http-routing-benchmark](https://github.com/julienschmidt/go-http-routing-benchmark)

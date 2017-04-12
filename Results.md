@@ -10,13 +10,13 @@ Spec MacBook Pro
 
 ```
 [09:26:21] abhinav: ~/Documents/go/src/github.com/abhinavdangeti/routerCheck $ go test -bench=. -test.benchmem
-Benchmark_gmux_serve_GET-8               1000000          1520 ns/op        1064 B/op         12 allocs/op
+Benchmark_gmux_serve_GET-8               1000000          1540 ns/op        1064 B/op         12 allocs/op
 Benchmark_gmux_serve_POST-8              1000000          1516 ns/op        1064 B/op         12 allocs/op
-Benchmark_bone_serve_GET-8               2000000           776 ns/op         688 B/op          5 allocs/op
-Benchmark_bone_serve_POST-8              2000000           823 ns/op         848 B/op          7 allocs/op
-Benchmark_smux_serve_GET-8               1000000          1073 ns/op         760 B/op         10 allocs/op
-Benchmark_smux_serve_POST-8              1000000          1144 ns/op         920 B/op         10 allocs/op
-Benchmark_httprouter_serve_GET-8        20000000           111 ns/op          32 B/op          1 allocs/op
+Benchmark_bone_serve_GET-8               2000000           795 ns/op         688 B/op          5 allocs/op
+Benchmark_bone_serve_POST-8              2000000           789 ns/op         688 B/op          5 allocs/op
+Benchmark_smux_serve_GET-8               1000000          1072 ns/op         760 B/op         10 allocs/op
+Benchmark_smux_serve_POST-8              1000000          1092 ns/op         760 B/op         10 allocs/op
+Benchmark_httprouter_serve_GET-8        20000000           107 ns/op          32 B/op          1 allocs/op
 Benchmark_httprouter_serve_POST-8       20000000           106 ns/op          32 B/op          1 allocs/op
 ```
 

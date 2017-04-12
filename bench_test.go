@@ -108,7 +108,7 @@ func Benchmark_bone_serve_GET(b *testing.B) {
 
 func Benchmark_bone_serve_POST(b *testing.B) {
 	index := "primary_index"
-	router := loadbone("POST", "/user/{name}", http.HandlerFunc(boneWrite))
+	router := loadbone("POST", "/user/:name", http.HandlerFunc(boneWrite))
 	r, _ := http.NewRequest("POST", "/user/index", bytes.NewReader([]byte(index)))
 	benchServe(b, router, r)
 }
@@ -139,7 +139,7 @@ func Benchmark_smux_serve_GET(b *testing.B) {
 
 func Benchmark_smux_serve_POST(b *testing.B) {
 	index := "primary_index"
-	router := loadsmux("POST", "/user/{name}", smuxWrite)
+	router := loadsmux("POST", "/user/:name", smuxWrite)
 	r, _ := http.NewRequest("POST", "/user/index", bytes.NewReader([]byte(index)))
 	benchServe(b, router, r)
 }

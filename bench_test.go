@@ -69,11 +69,9 @@ func benchServeMultipleRoutes(b *testing.B, router http.Handler) {
 	b.ResetTimer()
 
 	for i := 0; i < b.N; i++ {
-		for _, route := range routes {
-			r.Method = route.method
-			r.RequestURI = route.path
-			router.ServeHTTP(w, r)
-		}
+		r.Method = routes[i%len(routes)].method
+		r.RequestURI = routes[i%len(routes)].path
+		router.ServeHTTP(w, r)
 	}
 }
 

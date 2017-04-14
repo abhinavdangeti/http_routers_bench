@@ -1,4 +1,4 @@
-package routerCheck
+package routersBench
 
 import (
 	"bytes"
